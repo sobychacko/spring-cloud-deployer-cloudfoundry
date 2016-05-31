@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -39,13 +37,16 @@ import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.cloudfoundry.operations.applications.PushApplicationRequest;
 import org.cloudfoundry.operations.applications.StartApplicationRequest;
 import org.cloudfoundry.operations.services.BindServiceInstanceRequest;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.app.DeploymentState;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * A deployer that targets Cloud Foundry using the public API.
@@ -68,18 +69,21 @@ public class CloudFoundryAppDeployer implements AppDeployer {
 
 	private final CloudFoundryClient client;
 
+	private final CloudFoundryAppDeployerEnhancements appDeployerEnhancements;
+
 	private static final Log logger = LogFactory.getLog(CloudFoundryAppDeployer.class);
 
 	public CloudFoundryAppDeployer(CloudFoundryDeployerProperties properties, CloudFoundryOperations operations,
-								   CloudFoundryClient client) {
+								   CloudFoundryClient client, CloudFoundryAppDeployerEnhancements appDeployerEnhancements) {
 		this.properties = properties;
 		this.operations = operations;
 		this.client = client;
+		this.appDeployerEnhancements = appDeployerEnhancements;
 	}
 
 	@Override
 	public String deploy(AppDeploymentRequest request) {
-		String deploymentId = deploymentId(request);
+		String deploymentId = appDeployerEnhancements.getUniquePrefixedApp(request);
 		DeploymentState state = status(deploymentId).getState();
 		if (state != DeploymentState.unknown) {
 			throw new IllegalStateException(String.format("App %s is already deployed with state %s",
@@ -93,7 +97,7 @@ public class CloudFoundryAppDeployer implements AppDeployer {
 	}
 
 	Mono<Void> asyncDeploy(AppDeploymentRequest request) {
-		String name = deploymentId(request);
+		String name = appDeployerEnhancements.getUniquePrefixedApp(request);
 
 		Map<String, String> envVariables = new HashMap<>();
 
@@ -184,13 +188,6 @@ public class CloudFoundryAppDeployer implements AppDeployer {
 			.then(ad -> createAppStatusBuilder(id, ad))
 			.otherwise(e -> emptyAppStatusBuilder(id))
 			.map(AppStatus.Builder::build);
-	}
-
-
-	private String deploymentId(AppDeploymentRequest request) {
-		return Optional.ofNullable(request.getEnvironmentProperties().get(GROUP_PROPERTY_KEY))
-				.map(groupName -> String.format("%s-", groupName))
-				.orElse("") + request.getDefinition().getName();
 	}
 
 	private Mono<String> getApplicationId(String name) {
