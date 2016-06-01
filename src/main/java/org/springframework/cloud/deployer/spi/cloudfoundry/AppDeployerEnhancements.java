@@ -15,8 +15,6 @@
  */
 package org.springframework.cloud.deployer.spi.cloudfoundry;
 
-import java.util.Map;
-
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 
 /**
@@ -24,7 +22,6 @@ import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
  */
 public interface AppDeployerEnhancements {
 
-	String getUniquePrefixedApp(AppDeploymentRequest request);
+	String getUniquelyPrefixedApp(AppDeploymentRequest request);
 
-	void setAdditionalEnvVars(Map<String,String> additionallEnvVars);
 }

@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.deployer.spi.cloudfoundry;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -39,7 +38,7 @@ public class CloudFoundryAppDeployerEnhancements implements AppDeployerEnhanceme
 	}
 
 	@Override
-	public String getUniquePrefixedApp(AppDeploymentRequest request) {
+	public String getUniquelyPrefixedApp(AppDeploymentRequest request) {
 		String key = String.format("%s-%s", properties.getUsername(), deploymentId(request));
 		if (enhancedAppInfo.containsKey(key)) {
 			return enhancedAppInfo.get(key);
@@ -51,11 +50,6 @@ public class CloudFoundryAppDeployerEnhancements implements AppDeployerEnhanceme
 		enhancedAppInfo.put(key, uniquePrefixedAppName);
 
 		return uniquePrefixedAppName;
-	}
-
-	@Override
-	public void setAdditionalEnvVars(Map<String, String> additionallEnvVars) {
-		throw new UnsupportedOperationException();
 	}
 
 	private String deploymentId(AppDeploymentRequest request) {

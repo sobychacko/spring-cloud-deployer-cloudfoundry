@@ -83,7 +83,7 @@ public class CloudFoundryAppDeployer implements AppDeployer {
 
 	@Override
 	public String deploy(AppDeploymentRequest request) {
-		String deploymentId = appDeployerEnhancements.getUniquePrefixedApp(request);
+		String deploymentId = appDeployerEnhancements.getUniquelyPrefixedApp(request);
 		DeploymentState state = status(deploymentId).getState();
 		if (state != DeploymentState.unknown) {
 			throw new IllegalStateException(String.format("App %s is already deployed with state %s",
@@ -97,7 +97,7 @@ public class CloudFoundryAppDeployer implements AppDeployer {
 	}
 
 	Mono<Void> asyncDeploy(AppDeploymentRequest request) {
-		String name = appDeployerEnhancements.getUniquePrefixedApp(request);
+		String name = appDeployerEnhancements.getUniquelyPrefixedApp(request);
 
 		Map<String, String> envVariables = new HashMap<>();
 
